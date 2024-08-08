@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "584212297081",
+    "project_id": "animalwelfare-6f249",
+    "storage_bucket": "animalwelfare-6f249.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:584212297081:android:05cd26fc791982d432eba8",
+        "android_client_info": {
+          "package_name": "com.example.animalwelfare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7T8DhUhbZmOGXDw5pFW2EuX5O5GyYB5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

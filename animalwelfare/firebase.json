@@ -1,0 +1,22 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "animalwelfare-6f249",
+                    "appId": "1:584212297081:android:05cd26fc791982d432eba8",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "animalwelfare-6f249",
+                    "configurations": {
+                        "android": "1:584212297081:android:05cd26fc791982d432eba8",
+                        "web": "1:584212297081:web:3e2cbdea44e543c432eba8"
+                    }
+                }
+            }
+        }
+    }
+}
