@@ -1,6 +1,6 @@
-import 'package:animalwelfare/Animal_hospital.dart';
-import 'package:animalwelfare/homescreen.dart';
-import 'package:animalwelfare/profilescreen.dart';
+import 'package:animalwelfare/screens/Animal_hospital.dart';
+import 'package:animalwelfare/screens/homescreen.dart';
+import 'package:animalwelfare/screens/profilescreen.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -27,25 +27,13 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return
-        // AnnotatedRegion<SystemUiOverlayStyle>(
-        //   value: SystemUiOverlayStyle.dark.copyWith(
-        //     // statusBarColor: Colors.white, // Set to your desired color
-        //   ),
-        // child:
-        Scaffold(
+    return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
         child: _children.elementAt(_currentIndex),
       ),
       bottomNavigationBar: Stack(
         children: [
-          // Positioned.fill(
-          //   child: Image.asset(
-          //     'assets/images/bg-2.png',
-          //     fit: BoxFit.cover,
-          //   ),
-          // ),
           SizedBox(
             height: 65,
             child: BottomNavigationBar(

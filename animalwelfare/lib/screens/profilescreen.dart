@@ -1,5 +1,5 @@
-import 'package:animalwelfare/login.dart';
-import 'package:animalwelfare/register.dart';
+import 'package:animalwelfare/screens/login.dart';
+import 'package:animalwelfare/screens/register.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatelessWidget {

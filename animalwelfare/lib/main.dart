@@ -1,23 +1,17 @@
-import 'package:animalwelfare/firebase_options.dart';
-import 'package:animalwelfare/splash_screen.dart';
+import 'package:animalwelfare/services/firebase_options.dart';
+import 'package:animalwelfare/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
-  // Ensure that Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Initialize Firebase
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    await Firebase.initializeApp();
     print('Firebase initialized successfully');
   } catch (e) {
     print("Firebase initialization error: $e");
   }
-  
-  // Run the app
   runApp(const MyApp());
 }
 

@@ -1,6 +1,6 @@
-import 'package:animalwelfare/animatelogo.dart';
-import 'package:animalwelfare/custompageroute.dart';
-import 'package:animalwelfare/homepage.dart';
+import 'package:animalwelfare/widgets/animatelogo.dart';
+import 'package:animalwelfare/widgets/custompageroute.dart';
+import 'package:animalwelfare/screens/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

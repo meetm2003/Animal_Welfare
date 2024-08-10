@@ -1,5 +1,5 @@
-import 'package:animalwelfare/chatscreen.dart';
-import 'package:animalwelfare/custompageroute.dart';
+import 'package:animalwelfare/screens/chatscreen.dart';
+import 'package:animalwelfare/widgets/custompageroute.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
