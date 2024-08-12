@@ -1,4 +1,3 @@
-import 'package:animalwelfare/services/firebase_options.dart';
 import 'package:animalwelfare/screens/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';

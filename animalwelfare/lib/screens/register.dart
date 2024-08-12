@@ -1,15 +1,17 @@
 import 'dart:io';
-
-import 'package:animalwelfare/screens/homescreen.dart';
-import 'package:animalwelfare/widgets/admin_info.dart';
+import 'package:animalwelfare/screens/homepage.dart';
+import 'package:animalwelfare/services/saveHospitalData.dart';
+import 'package:animalwelfare/services/saveNgoData.dart';
+import 'package:animalwelfare/services/saveUserData.dart';
 import 'package:animalwelfare/widgets/custom_textfield.dart';
 import 'package:animalwelfare/widgets/hospital_info.dart';
+import 'package:animalwelfare/widgets/imageconverter.dart';
 import 'package:animalwelfare/widgets/ngo_info.dart';
+import 'package:animalwelfare/widgets/pdfconverter.dart';
 import 'package:animalwelfare/widgets/user_info.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';  // Import Firebase Realtime Database package
-import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Register extends StatefulWidget {
@@ -20,44 +22,45 @@ class Register extends StatefulWidget {
 }
 
 class RegisterState extends State<Register> {
-  String userType = '';
-  final TextEditingController nameController = TextEditingController();
+  String email = '', password = '', selectedUserType = "user";
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController workRoleController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
   final TextEditingController contactController = TextEditingController();
-  final TextEditingController certificateController = TextEditingController();
-  final TextEditingController imageController = TextEditingController();
-  final TextEditingController workRoleController= TextEditingController();
+  final TextEditingController addressController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
-  XFile? _ngoImage;
+  XFile? _profileImage;
+  String? base64image;
   File? _certificateFile;
+  String? base64Pdf;
 
-  void _pickImage() async {
+  Future<void> pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
     setState(() {
-      _ngoImage = image;
+      _profileImage = image;
     });
+    base64image = await ImageConverter.imageToBase64(File(image!.path));
   }
 
-  void _pickPdf() async {
+  Future<void> pickPdf() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
-
     if (result != null) {
+      File pdfFile = File(result.files.single.path!);
       setState(() {
-        _certificateFile = File(result.files.single.path!);
+        _certificateFile = pdfFile;
       });
+      base64Pdf = await PDFConverter.pdfToBase64(pdfFile);
     }
   }
 
-  Future<void> _register() async {
-    if (_formKey.currentState?.validate() ?? false) {
+  Future<void> registeration() async {
+    if (password != null && emailController.text != "") {
       try {
         UserCredential userCredential =
             await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -65,58 +68,49 @@ class RegisterState extends State<Register> {
           password: passwordController.text,
         );
 
-        final userId = userCredential.user?.uid;
+        String userId = userCredential.user!.uid;
 
-        if (userId != null) {
-          DatabaseReference dbRef = FirebaseDatabase.instance.ref();
-
-          if (userType == 'user') {
-            await dbRef.child('users').child(userId).set({
-              'name': nameController.text,
-              'email': emailController.text,
-              'profileImage': imageController.text,  // Handle image URL
-              'work': workRoleController.text,  // Work role input is empty
-            });
-          } else if (userType == 'hospital') {
-            await dbRef.child('hospitals').child(userId).set({
-              'name': nameController.text,
-              'email': emailController.text,
-              'certificate': certificateController.text,  // Handle PDF URL
-              'image': imageController.text,  // Handle image URL
-              'address': addressController.text,
-              'contact': contactController.text,
-            });
-          } else if (userType == 'ngo') {
-            await dbRef.child('ngos').child(userId).set({
-              'name': nameController.text,
-              'email': emailController.text,
-              'certificate': certificateController.text,  // Handle PDF URL
-              'image': imageController.text,  // Handle image URL
-              'address': addressController.text,
-              'contact': contactController.text,
-            });
-          } else if (userType == 'admin') {
-            await dbRef.child('admins').child(userId).set({
-              'name': nameController.text,
-              'email': emailController.text,
-            });
-          }
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                "Registered Successfully!",
-                style: TextStyle(fontSize: 20.0),
-              ),
-            ),
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
-          );
+        if (selectedUserType == 'user') {
+          UserDatabaseService.saveUserData(
+              userId: userId,
+              email: emailController.text,
+              name: nameController.text,
+              profileImage: base64image ?? '',
+              work: workRoleController.text);
+        } else if (selectedUserType == 'ngo') {
+          NgoDatabaseService.saveNgoData(
+              ngoId: userId,
+              name: nameController.text,
+              email: emailController.text,
+              certificate: base64Pdf ?? '',
+              profileImage: base64image ?? '',
+              address: addressController.text,
+              contact: contactController.text);
+        } else if (selectedUserType == 'hospital') {
+          HospitalDatabaseService.saveHospitalData(
+              hospitalId: userId,
+              name: nameController.text,
+              email: emailController.text,
+              certificate: base64Pdf ?? '',
+              profileImage: base64image ?? '',
+              address: addressController.text,
+              contact: contactController.text);
         }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              "Registered Successfully!",
+              style: TextStyle(fontSize: 20.0),
+            ),
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const HomePage(),
+          ),
+        );
       } on FirebaseAuthException catch (e) {
         if (e.code == 'weak-password') {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -146,9 +140,27 @@ class RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final padding = mediaQuery.size.width * 0.05;
+    final screenWidth = mediaQuery.size.width;
+    final padding = screenWidth * 0.05;
+    final profileImageSize = screenWidth * 0.3;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text(
+          "Registration",
+          style: TextStyle(color: Colors.white, fontSize: 24),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -169,32 +181,91 @@ class RegisterState extends State<Register> {
             ),
           ),
           Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: padding),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      "Register",
-                      style: TextStyle(
-                        fontSize: 32,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    const SizedBox(
+                      height: 100,
                     ),
-                    const SizedBox(height: 35),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Column(
+                          children: [
+                            GestureDetector(
+                              onTap: pickImage,
+                              child: CircleAvatar(
+                                radius: profileImageSize / 2,
+                                backgroundImage: _profileImage != null
+                                    ? FileImage(File(_profileImage!.path))
+                                    : const AssetImage(
+                                            'assets/images/default_profile.png')
+                                        as ImageProvider,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              "Profile Pic",
+                              style: TextStyle(
+                                color: Colors.black45,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (selectedUserType == 'ngo' ||
+                            selectedUserType == 'hospital') ...[
+                          const SizedBox(width: 30),
+                          Column(
+                            children: [
+                              GestureDetector(
+                                onTap: pickPdf,
+                                child: CircleAvatar(
+                                  radius: profileImageSize / 2,
+                                  backgroundColor: Colors.grey[300],
+                                  child: _certificateFile != null
+                                      ? const Icon(Icons.picture_as_pdf,
+                                          color: Colors.red, size: 40)
+                                      : const Text(
+                                          "PDF",
+                                          style: TextStyle(
+                                            color: Colors.black45,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                selectedUserType == 'hospital'
+                                    ? "Hospital Certificate"
+                                    : "NGO Certificate",
+                                style: const TextStyle(
+                                  color: Colors.black45,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 30),
                     DropdownButtonFormField<String>(
-                      value: userType.isEmpty ? null : userType,
+                      value: selectedUserType.isEmpty ? null : selectedUserType,
                       items: const [
                         DropdownMenuItem(child: Text('User'), value: 'user'),
-                        DropdownMenuItem(child: Text('Hospital'), value: 'hospital'),
+                        DropdownMenuItem(
+                            child: Text('Hospital'), value: 'hospital'),
                         DropdownMenuItem(child: Text('NGO'), value: 'ngo'),
                       ],
                       onChanged: (value) {
                         setState(() {
-                          userType = value ?? '';
+                          selectedUserType = value!;
                         });
                       },
                       decoration: InputDecoration(
@@ -215,40 +286,26 @@ class RegisterState extends State<Register> {
                         ),
                       ),
                     ),
-                    if (userType == 'user') ...[
+                    const SizedBox(height: 15),
+                    if (selectedUserType == 'user') ...[
                       Userinfo(
-                        nameController: nameController,
-                        emailController: emailController,
-                        workRoleController: TextEditingController(),
-                        onPickImage: _pickImage,
-                      ),
-                    ] else if (userType == 'hospital') ...[
+                          nameController: nameController,
+                          emailController: emailController,
+                          workRoleController: workRoleController),
+                    ] else if (selectedUserType == 'hospital') ...[
                       HospitalInfo(
-                        nameController: nameController,
-                        emailController: emailController,
-                        addressController: addressController,
-                        contactController: contactController,
-                        certificateController: certificateController,
-                        onPickImage: _pickImage,
-                        onPickPdf: _pickPdf,
-                      ),
-                    ] else if (userType == 'ngo') ...[
+                          nameController: nameController,
+                          emailController: emailController,
+                          addressController: addressController,
+                          contactController: contactController),
+                    ] else if (selectedUserType == 'ngo') ...[
                       NgoInfo(
-                        nameController: nameController,
-                        emailController: emailController,
-                        addressController: addressController,
-                        contactController: contactController,
-                        certificateController: certificateController,
-                        onPickImage: _pickImage,
-                        onPickPdf: _pickPdf,
-                      ),
-                    ] else if (userType == 'admin') ...[
-                      AdminInfo(
-                        nameController: nameController,
-                        emailController: emailController,
-                      ),
+                          nameController: nameController,
+                          emailController: emailController,
+                          addressController: addressController,
+                          contactController: contactController),
                     ],
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 5),
                     CustomTextField(
                       hint: "Password",
                       color: Colors.grey,
@@ -257,7 +314,15 @@ class RegisterState extends State<Register> {
                     ),
                     const SizedBox(height: 30),
                     ElevatedButton(
-                      onPressed: _register,
+                      onPressed: () {
+                        if (_formKey.currentState!.validate()) {
+                          setState(() {
+                            email = emailController.text;
+                            password = passwordController.text;
+                          });
+                        }
+                        registeration();
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             const Color.fromARGB(255, 113, 165, 255),
@@ -278,6 +343,9 @@ class RegisterState extends State<Register> {
                         ),
                       ),
                     ),
+                    const SizedBox(
+                      height: 100,
+                    )
                   ],
                 ),
               ),
